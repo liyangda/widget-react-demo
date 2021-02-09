@@ -5,6 +5,7 @@ import { observer } from 'mobx-react';
 import { Select, Input } from 'antd';
 
 const options = [{ label: 'test', value: 'test' }];
+const options2 = [{ label: 'test', value: 'test', type: 'datetime' }];
 
 const ObserverSelect = observer(({ record, dataIndex }) => {
   const { [dataIndex]: value, update } = record;
@@ -22,7 +23,7 @@ const ObserverSelectWithType = observer(({ record, dataIndex }) => {
     update('type', option.type);
   };
 
-  return <Select {...{ value, options, onChange }} />;
+  return <Select {...{ value, options: options2, onChange }} />;
 });
 
 const ObserverSelectOrContent = observer(({ record, dataIndex }) => {
@@ -36,13 +37,13 @@ const ObserverSelectOrContent = observer(({ record, dataIndex }) => {
 const ObserverInput = observer(({ record, dataIndex }) => {
   const { [dataIndex]: value, update } = record;
 
-  const onChange = (value) => update(dataIndex, value);
+  const onChange = (e) => update(dataIndex, e.target.value);
 
   return <Input {...{ value, onChange }} />;
 });
 
 const ObserverContent = observer(({ record, dataIndex }) => {
-  const { [dataIndex]: value } = record;
+  const { [dataIndex]: value = '' } = record;
 
   return value;
 });

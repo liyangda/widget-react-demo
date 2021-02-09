@@ -29,6 +29,7 @@ function extendOrUpdate(item, obj) {
 function collectCheckedKeys(arr) {
   if (!Array.isArray(arr)) return [];
 
+  // eslint-disable-next-line no-sequences
   return arr.reduce((acc, cur) => (cur.checked && acc.push(cur.key), acc), []);
 }
 
@@ -102,19 +103,19 @@ export function useTable({ dataSource, defaultValue, sourceType, targetType, cha
   const [sourceData, targetData, rest] = useDefaultValue(source, defaultValue);
 
   // get selected keys
-  const [selectRowKeys, setSelectedRowKeys] = React.useState(collectCheckedKeys(sourceData));
-
-  // callback for selected row keys changed
-  const onChange = React.useCallback((...args) => setSelectedRowKeys(...args), []);
+  const [selectedRowKeys, setSelectedRowKeys] = React.useState(collectCheckedKeys(sourceData));
 
   // rowSelection for source node
   const sourceRowSelection = React.useMemo(() => ({
-    selectRowKeys, onChange, getCheckboxProps: () => ({ disabled: false }),
-  }), [selectRowKeys, onChange]);
+    selectedRowKeys,
+    onChange: (...args) => setSelectedRowKeys(...args),
+    getCheckboxProps: () => ({ disabled: false }),
+  }), [selectedRowKeys]);
   // rowSelection for source node
   const targetRowSelection = React.useMemo(() => ({
-    selectRowKeys, getCheckboxProps: () => ({ disabled: true }),
-  }), [selectRowKeys]);
+    selectedRowKeys,
+    getCheckboxProps: () => ({ disabled: true }),
+  }), [selectedRowKeys]);
 
   // effect when sourceData changed
   React.useEffect(() => setSelectedRowKeys(collectCheckedKeys(sourceData)), [sourceData]);
