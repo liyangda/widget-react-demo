@@ -1,52 +1,6 @@
 import React from 'react';
 
-import { observer } from 'mobx-react';
-
-import { Select, Input } from 'antd';
-
-const options = [{ label: 'test', value: 'test' }];
-const options2 = [{ label: 'test', value: 'test', type: 'datetime' }];
-
-const ObserverSelect = observer(({ record, dataIndex }) => {
-  const { [dataIndex]: value, update } = record;
-
-  const onChange = (value) => update(dataIndex, value);
-
-  return <Select {...{ value, options, onChange }} />;
-});
-
-const ObserverSelectWithType = observer(({ record, dataIndex }) => {
-  const { [dataIndex]: value, update } = record;
-
-  const onChange = (value, option) => {
-    update(dataIndex, value);
-    update('type', option.type);
-  };
-
-  return <Select {...{ value, options: options2, onChange }} />;
-});
-
-const ObserverSelectOrContent = observer(({ record, dataIndex }) => {
-  const { [dataIndex]: value, isFormatSelectable, update } = record;
-
-  const onChange = (value) => update(dataIndex, value);
-
-  return isFormatSelectable ? <Select {...{ value, options, onChange }} /> : '';
-});
-
-const ObserverInput = observer(({ record, dataIndex }) => {
-  const { [dataIndex]: value, update } = record;
-
-  const onChange = (e) => update(dataIndex, e.target.value);
-
-  return <Input {...{ value, onChange }} />;
-});
-
-const ObserverContent = observer(({ record, dataIndex }) => {
-  const { [dataIndex]: value = '' } = record;
-
-  return value;
-});
+import { ObserverSelect, ObserverSelectWithType, ObserverSelectOrContent, ObserverInput, ObserverContent } from './components';
 
 /** Columns for the source node which type is kafka */
 export const KafkaSourceColumns = [

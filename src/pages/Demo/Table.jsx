@@ -11,14 +11,24 @@ const onChange = ({ inputFormat, outputFormat }) => {
   console.table(outputFormat);
 };
 
+const Test = ({ children }) => {
+  // return React.Children.toArray(children);
+  return React.Children.map(children, (...args) => {
+    // debugger;
+    return args[0];
+  });
+};
+
 const Comp = () => {
   return (
     <Typography>
       <Typography.Title>Kafka -> Database</Typography.Title>
       <Typography.Paragraph>
-        <Table {...{ ...getMockData(201, 101), onChange }} />
+        <Test>
+          <Table {...{ ...getMockData(101, 201), onChange }} />
+        </Test>
       </Typography.Paragraph>
-      <Typography.Title>Kafka -> Standard</Typography.Title>
+      {/* <Typography.Title>Kafka -> Standard</Typography.Title>
       <Typography.Paragraph>
         <Table {...{ ...getMockData(201, 301), onChange }} />
       </Typography.Paragraph>
@@ -41,7 +51,7 @@ const Comp = () => {
       <Typography.Title>Standard -> Kafka</Typography.Title>
       <Typography.Paragraph>
         <Table {...{ ...getMockData(301, 201), onChange }} />
-      </Typography.Paragraph>
+      </Typography.Paragraph> */}
     </Typography>
   );
 };
