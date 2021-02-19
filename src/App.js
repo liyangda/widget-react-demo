@@ -1,7 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
 
-import FilterTable from './pages/Demo/Table';
+import FilterTable from './pages/Demo/Table2';
 
 function App() {
   // return (
