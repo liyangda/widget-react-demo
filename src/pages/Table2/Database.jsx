@@ -21,7 +21,7 @@ const Source = (props) => {
   const columns = useColumns();
 
   return (
-    <Table columns={columns} rowKeys="key" {...props}>
+    <Table columns={columns} rowKey="$$key" {...props}>
       <Observer dataIndex="name" component={Custom.Content} />
       <Observer dataIndex="type" component={Custom.Content} />
     </Table>
@@ -34,7 +34,7 @@ const Target = ({ options, ...props }) => {
 
   return (
     <Provider value={ctxValue}>
-      <Table columns={columns} rowKeys="key" {...props}>
+      <Table columns={columns} rowKey="$$key" {...props}>
         <Observer dataIndex="name" component={Custom.Select} allowFilter />
         <Observer dataIndex="type" component={Custom.Content} />
       </Table>

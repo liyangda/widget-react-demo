@@ -23,7 +23,7 @@ const Source = ({ options, ...props }) => {
 
   return (
     <Provider value={ctxValue}>
-      <Table columns={columns} rowKeys="key" {...props}>
+      <Table columns={columns} rowKey="$$key" {...props}>
         <Observer dataIndex="sourcePath" component={Custom.Content} />
         <Observer dataIndex="alias" component={Custom.Content} />
         <Observer dataIndex="format" component={Custom.Format} />
@@ -39,7 +39,7 @@ const Target = ({ options, ...props }) => {
 
   return (
     <Provider value={ctxValue}>
-      <Table columns={columns} rowKeys="key" {...props}>
+      <Table columns={columns} rowKey="$$key" {...props}>
         <Observer dataIndex="sourcePath" component={Custom.Content} />
         <Observer dataIndex="alias" component={Custom.Input} />
         <Observer dataIndex="format" component={Custom.Content} />

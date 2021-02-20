@@ -6,7 +6,7 @@ import { observer } from 'mobx-react';
 const Observer = ({ dataIndex, record, component: Component, ...props }) => {
   const { [dataIndex]: value } = record || {};
 
-  const onChange = React.useCallback((value, option) => {
+  const onChange = React.useCallback((value, option = {}) => {
     runInAction(() => {
       record[dataIndex] = value;
 

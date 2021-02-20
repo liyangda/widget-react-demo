@@ -12,6 +12,24 @@ function toMap(source, target, key) {
   return source.reduce((acc, cur, index) => ({ ...acc, [cur[key]]: { source: cur, target: target[index] } }), {});
 }
 
+function useRowSelection(defaultValue, key) {
+  const [selectedRowKeys, setSelectedRowKeys] = React.useState(() => {
+    const { input } = defaultValue || {};
+
+    if (Array.isArray(input)) {
+      return input.map((item) => item[key]);
+    }
+
+    return [];
+  });
+
+  const onChange = React.useCallback((selectedRowKeys) => {
+    setSelectedRowKeys(selectedRowKeys);
+  }, []);
+
+  return React.useMemo(() => ({ selectedRowKeys, onChange }), [selectedRowKeys, onChange]);
+}
+
 function useDatabase2Database(dataSource, defaultValue) {
   const isMounted = React.useRef();
   const [{ source, target }, setState] = React.useState(() => {
@@ -23,8 +41,8 @@ function useDatabase2Database(dataSource, defaultValue) {
       // 获取默认值
       const { source = {}, target = {} } = map[cur.name] || {};
 
-      acc.source.push(toObservable({ key: cur.name, ...cur, ...source }));
-      acc.target.push(toObservable({ key: cur.name, ...cur, ...target }));
+      acc.source.push(toObservable({ $$key: cur.name, ...cur, ...source }));
+      acc.target.push(toObservable({ $$key: cur.name, ...cur, ...target }));
 
       return acc;
     }, { source: [], target: [] });
@@ -33,8 +51,8 @@ function useDatabase2Database(dataSource, defaultValue) {
   React.useEffect(() => {
     if (isMounted.current) {
       setState(dataSource.reduce((acc, cur) => {
-        const source = toObservable({ key: cur.name, ...cur });
-        const target = toObservable({ key: cur.name, ...cur });
+        const source = toObservable({ $$key: cur.name, ...cur });
+        const target = toObservable({ $$key: cur.name, ...cur });
   
         acc.source.push(source);
         acc.target.push(target);
@@ -64,8 +82,8 @@ function useDatabase2Kafka(dataSource, defaultValue) {
       // 获取默认值
       const { source = {}, target = {} } = map[cur.name] || {};
 
-      acc.source.push(toObservable({ key: cur.name, ...cur, ...source }));
-      acc.target.push(toObservable({ key: transfer.sourcePath, ...transfer, ...target }));
+      acc.source.push(toObservable({ $$key: cur.name, ...cur, ...source }));
+      acc.target.push(toObservable({ $$key: cur.name, ...transfer, ...target }));
 
       return acc;
     }, { source: [], target: [], custom });
@@ -79,8 +97,8 @@ function useDatabase2Kafka(dataSource, defaultValue) {
           ...dataSource.reduce((acc, cur) => {
             const transfer = database2kafka(cur);
       
-            acc.source.push(toObservable({ key: cur.name, ...cur }));
-            acc.target.push(toObservable({ key: transfer.sourcePath, ...transfer }));
+            acc.source.push(toObservable({ $$key: cur.name, ...cur }));
+            acc.target.push(toObservable({ $$key: cur.name, ...transfer }));
       
             return acc;
           }, { source: [], target: [] }),
@@ -107,8 +125,8 @@ function useKafka2Database(dataSource, defaultValue) {
       const transfer = kafka2database(cur);
       // 获取默认值
       const defaultValue = map[cur.name] || {};
-      const source = toObservable({ key: cur.sourcePath, ...cur, ...defaultValue.source });
-      const target = toObservable({ key: transfer.name, ...transfer, ...defaultValue.target });
+      const source = toObservable({ $$key: cur.sourcePath, ...cur, ...defaultValue.source });
+      const target = toObservable({ $$key: cur.sourcePath, ...transfer, ...defaultValue.target });
 
       const dispose = toAutorun(() => {
         const flag = /(date|time)/.test(target.type);
@@ -132,8 +150,8 @@ function useKafka2Database(dataSource, defaultValue) {
   React.useEffect(() => {
     if (isMounted.current) {
       const { source, target, ...rest } = dataSource.reduce((acc, cur) => {
-        const source = toObservable(cur);
-        const target = toObservable(kafka2database(cur));
+        const source = toObservable({ $$key: cur.sourcePath, ...cur });
+        const target = toObservable({ $$key: cur.sourcePath, ...kafka2database(cur) });
   
         const dispose = toAutorun(() => {
           const flag = /(date|time)/.test(target.type);
@@ -164,33 +182,36 @@ function useKafka2Database(dataSource, defaultValue) {
 
 export const Database2Database = ({ dataSource, defaultValue, options }) => {
   const { source, target } = useDatabase2Database(dataSource, defaultValue);
+  const rowSelection = useRowSelection(defaultValue, 'name');
 
   return (
     <Layout>
-      <Database.Source dataSource={source} />
-      <Database.Target dataSource={target} options={options} />
+      <Database.Source rowSelection={rowSelection} dataSource={source} />
+      <Database.Target rowSelection={rowSelection} dataSource={target} options={options} />
     </Layout>
   );
 };
 
 export const Database2Kafka = ({ dataSource, defaultValue }) => {
   const { source, target, custom } = useDatabase2Kafka(dataSource, defaultValue);
+  const rowSelection = useRowSelection(defaultValue, 'name');
 
   return (
     <Layout>
-      <Database.Source dataSource={source} />
-      <Kafka.Target dataSource={target} />
+      <Database.Source rowSelection={rowSelection} dataSource={source} />
+      <Kafka.Target rowSelection={rowSelection} dataSource={target} />
     </Layout>
   );
 };
 
 export const Kafka2Database = ({ dataSource, defaultValue, format, options }) => {
   const { source, target } = useKafka2Database(dataSource);
+  const rowSelection = useRowSelection(defaultValue, 'sourcePath');
 
   return (
     <Layout>
-      <Kafka.Source dataSource={source} options={format} />
-      <Database.Target dataSource={target} options={options} />
+      <Kafka.Source rowSelection={rowSelection} dataSource={source} options={format} />
+      <Database.Target rowSelection={rowSelection} dataSource={target} options={options} />
     </Layout>
   );
 };
