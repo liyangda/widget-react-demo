@@ -9,6 +9,8 @@ import { DatabaseColumns } from './columns';
 
 import { Provider } from './context';
 
+import { useObservable } from './utils';
+
 function useColumns() {
   return React.useMemo(() => {
     return JSON.parse(JSON.stringify(DatabaseColumns));
@@ -28,11 +30,12 @@ const Source = (props) => {
 
 const Target = ({ options, ...props }) => {
   const columns = useColumns();
+  const ctxValue = useObservable(options);
 
   return (
-    <Provider value={options}>
+    <Provider value={ctxValue}>
       <Table columns={columns} rowKeys="key" {...props}>
-        <Observer dataIndex="name" component={Custom.Select} />
+        <Observer dataIndex="name" component={Custom.Select} allowFilter />
         <Observer dataIndex="type" component={Custom.Content} />
       </Table>
     </Provider>

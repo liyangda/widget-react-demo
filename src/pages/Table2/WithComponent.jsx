@@ -7,13 +7,13 @@ import { observer } from 'mobx-react';
 
 import { useContext } from './context';
 
-const WithContent = ({ value }) => value;
-
-const WithSelect = observer(({ onChange, ...props }) => {
+function useFilter(onChange, allowFilter) {
   const options = useContext();
   const previous = React.useRef();
   const change = React.useCallback((value, option) => {
-    onChange(value);
+    onChange(value, option);
+
+    if (!allowFilter) return;
 
     if (previous.current) {
       runInAction(() => {
@@ -24,13 +24,23 @@ const WithSelect = observer(({ onChange, ...props }) => {
     runInAction(() => {
       previous.current.disabled = true;
     });
-  }, [options, onChange]);
+  }, [options, allowFilter, onChange]);
 
   const filterOption = React.useCallback((inputValue, option) => {
     return !option.disabled;
   }, []);
 
-  return <Select options={options} filterOption={filterOption} onChange={change} {...props} />;
+  if (filterOption) return { options, filterOption, onChange: change };
+
+  return { options, onChange: change };
+}
+
+const WithContent = ({ value }) => value;
+
+const WithSelect = observer(({ onChange, allowFilter, ...props }) => {
+  const selectProps = useFilter(onChange, allowFilter);
+
+  return <Select {...selectProps} {...props} />;
 });
 
 const WithInput = ({ onChange, ...props }) => {
@@ -41,10 +51,17 @@ const WithInput = ({ onChange, ...props }) => {
   return <Input onChange={change} {...props} />;
 };
 
+const WithFormat = ({ value, ...props }) => {
+  if (value) return <WithSelect {...{ value, ...props }} />;
+
+  return '';
+};
+
 const WithComponent = {
   Content: WithContent,
   Input: WithInput,
   Select: WithSelect,
+  Format: WithFormat,
 };
 
 export default WithComponent;
