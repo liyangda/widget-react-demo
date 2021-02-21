@@ -26,11 +26,21 @@ const format = [
 ];
 
 const Demo = (props) => {
+  const ref = React.useRef();
+
+  const onClick = () => {
+    const { input, output } = ref.current.collect();
+
+    console.table(input);
+    console.table(output);
+  };
+
   return (
     <>
-      <Compose type={[101, 102]} {...{ dataSource, options }} />
-      <Compose type={[101, 201]} {...{ dataSource, options }} />
-      <Compose type={[201, 102]} {...{ dataSource: dataSource2, format, options }} />
+      <Compose type={[101, 102]} ref={ref} {...{ dataSource, options }} />
+      {/* <Compose type={[101, 201]} {...{ dataSource, options }} />
+      <Compose type={[201, 102]} {...{ dataSource: dataSource2, format, options }} /> */}
+      <button onClick={onClick}>Click</button>
     </>
   );
 };

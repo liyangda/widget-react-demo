@@ -1,6 +1,6 @@
 import React from 'react';
 
-import Table from './Table';
+import Table, { Summary } from './Table';
 import Observer from './Observer';
 
 import Custom from './WithComponent';
@@ -10,6 +10,23 @@ import { KafkaColumns } from './columns';
 import { Provider } from './context';
 
 import { useFreeze, useObservable } from './utils';
+
+function summary(custom) {
+  return custom.map((item) => {
+    return (
+      <Summary.Row>
+        <Summary.Cell />
+        {KafkaColumns.map((col) => {
+          const onChange = (e) => {
+            item[col.dataIndex] = e.target.value;
+          };
+
+          return <Summary.Cell><Custom.Input value={item[col.dataIndex]} onChange={onChange} /></Summary.Cell>
+        })}
+      </Summary.Row>
+    );
+  });
+}
 
 function useColumns() {
   return React.useMemo(() => {

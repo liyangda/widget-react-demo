@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { autorun, observable, reaction } from 'mobx';
+import { autorun, observable, reaction, toJS } from 'mobx';
 
 export function toObservable(target) {
   if (Array.isArray(target)) {
@@ -8,6 +8,14 @@ export function toObservable(target) {
   }
 
   return observable(target);
+}
+
+export function toJavaScript(target) {
+  if (Array.isArray(target)) {
+    return target.map((item) => toJS(item));
+  }
+
+  return toJS(target);
 }
 
 export function toReaction(data, effect) {
@@ -96,4 +104,4 @@ export function kafka2database(source) {
   };
 }
 
-export { runInAction } from 'mobx';
+export { action, runInAction } from 'mobx';

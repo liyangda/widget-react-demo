@@ -37,3 +37,7 @@ const WrapperTable = ({ children, columns, ...props }) => {
 };
 
 export default React.memo(WrapperTable);
+
+const Summary = Table.Summary;
+
+export { Summary };

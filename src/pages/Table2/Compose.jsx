@@ -4,12 +4,34 @@ import Database from './Database';
 import Kafka from './Kafka';
 import Layout from './Layout';
 
-import { database2kafka, kafka2database, toAutorun, toObservable, runInAction } from './utils';
+import { database2kafka, kafka2database, toAutorun, toObservable, runInAction, toJavaScript } from './utils';
 
 import { DATABASE_DATABASE, DATABASE_KAFKA, KAFKA_DATABASE } from './constant';
 
 function toMap(source, target, key) {
   return source.reduce((acc, cur, index) => ({ ...acc, [cur[key]]: { source: cur, target: target[index] } }), {});
+}
+
+function collect(source, target, keys = []) {
+  const result = { input: [], output: [] };
+
+  if (!keys.length) return result;
+
+  let i = 0;
+  const set = new Set(keys);
+
+  while (set.size) {
+    const current = source[i];
+
+    if (set.has(current['$$key'])) {
+      set.delete(current['$$key']);
+
+      result.input.push(toJavaScript(current));
+      result.output.push(toJavaScript(target[i++]));
+    }
+  }
+
+  return result;
 }
 
 function useRowSelection(defaultValue, key) {
@@ -23,7 +45,7 @@ function useRowSelection(defaultValue, key) {
     return [];
   });
 
-  const onChange = React.useCallback((selectedRowKeys) => {
+  const onChange = React.useCallback((selectedRowKeys, selectedRows) => {
     setSelectedRowKeys(selectedRowKeys);
   }, []);
 
@@ -180,43 +202,59 @@ function useKafka2Database(dataSource, defaultValue) {
   return { source, target };
 }
 
-export const Database2Database = ({ dataSource, defaultValue, options }) => {
+export const Database2Database = React.forwardRef(({ dataSource, defaultValue, options }, ref) => {
   const { source, target } = useDatabase2Database(dataSource, defaultValue);
   const rowSelection = useRowSelection(defaultValue, 'name');
 
+  React.useImperativeHandle(ref, () => ({
+    collect: () => collect(source, target, rowSelection.selectedRowKeys),
+  }));
+
   return (
     <Layout>
       <Database.Source rowSelection={rowSelection} dataSource={source} />
-      <Database.Target rowSelection={rowSelection} dataSource={target} options={options} />
+      <Database.Target rowSelection={{ ...rowSelection, getCheckboxProps: () => ({ disabled: true }) }} dataSource={target} options={options} />
     </Layout>
   );
-};
+});
 
-export const Database2Kafka = ({ dataSource, defaultValue }) => {
+export const Database2Kafka = React.forwardRef(({ dataSource, defaultValue }, ref) => {
   const { source, target, custom } = useDatabase2Kafka(dataSource, defaultValue);
   const rowSelection = useRowSelection(defaultValue, 'name');
 
+  React.useImperativeHandle(ref, () => ({
+    collect: () => {
+      const { input, output } = collect(source, target, rowSelection.selectedRowKeys);
+
+      return  { input, output: [...output, ...custom] };
+    },
+  }));
+
   return (
     <Layout>
       <Database.Source rowSelection={rowSelection} dataSource={source} />
-      <Kafka.Target rowSelection={rowSelection} dataSource={target} />
+      <Kafka.Target rowSelection={{ ...rowSelection, getCheckboxProps: () => ({ disabled: true }) }} dataSource={target} custom={custom} />
     </Layout>
   );
-};
+});
 
-export const Kafka2Database = ({ dataSource, defaultValue, format, options }) => {
+export const Kafka2Database = React.forwardRef(({ dataSource, defaultValue, format, options }, ref) => {
   const { source, target } = useKafka2Database(dataSource);
   const rowSelection = useRowSelection(defaultValue, 'sourcePath');
+
+  React.useImperativeHandle(ref, () => ({
+    collect: () => collect(source, target, rowSelection.selectedRowKeys),
+  }));
 
   return (
     <Layout>
       <Kafka.Source rowSelection={rowSelection} dataSource={source} options={format} />
-      <Database.Target rowSelection={rowSelection} dataSource={target} options={options} />
+      <Database.Target rowSelection={{ ...rowSelection, getCheckboxProps: () => ({ disabled: true }) }} dataSource={target} options={options} />
     </Layout>
   );
-};
+});
 
-const Compose = ({ type, ...props }) => {
+const Compose = ({ type, ...props }, ref) => {
   const calcType = React.useMemo(() => {
     if (Array.isArray) {
       return type.reduce((acc, cur) => acc + String(cur).charAt(0), '');
@@ -227,14 +265,14 @@ const Compose = ({ type, ...props }) => {
 
   switch (calcType) {
     case DATABASE_DATABASE:
-      return <Database2Database {...props} />;
+      return <Database2Database {...props} ref={ref} />;
     case DATABASE_KAFKA:
-      return <Database2Kafka {...props} />;
+      return <Database2Kafka {...props} ref={ref} />;
     case KAFKA_DATABASE:
-      return <Kafka2Database {...props} />;
+      return <Kafka2Database {...props} ref={ref} />;
     default:
       return null;
   }
 };
 
-export default Compose;
+export default React.forwardRef(Compose);
